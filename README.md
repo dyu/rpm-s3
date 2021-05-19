@@ -35,7 +35,7 @@ Use the provided `/test/test.sh` script:
 
 Also:
 
-    ./bin/rpm-s3 -b s3-bucket -p "centos/6" --sign my-app-1.0.0.x86_64.rpm
+    ./bin/rpm-s3 -b s3-bucket -p "centos/6" --sign 1 my-app-1.0.0.x86_64.rpm
 
     echo "[myrepo]
     name = This is my repo
@@ -58,7 +58,7 @@ Have a `~/.rpmmacros` file ready with the following content:
 
 Pass the `--sign` option to `rpm-s3`:
 
-    AWS_ACCESS_KEY="key" AWS_SECRET_KEY="secret" ./bin/rpm-s3 --sign my-app-1.0.0.x86_64.rpm
+    AWS_ACCESS_KEY="key" AWS_SECRET_KEY="secret" ./bin/rpm-s3 --sign 1 my-app-1.0.0.x86_64.rpm
 
 ### Import gpg key to install signed packages
 

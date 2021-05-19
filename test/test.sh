@@ -14,6 +14,6 @@ cp ${DIR}/.rpmmacros $TMPDIR/
 HOME="$TMPDIR"
 echo "HOME=$HOME"
 
-$ROOT_DIR/bin/rpm-s3 -b ${BUCKET:="pkgr-development-rpm"} -v -p gh/crohr/test/centos6/master --sign --keep 1000 ${DIR}/*.rpm
+$ROOT_DIR/bin/rpm-s3 -b ${BUCKET:="pkgr-development-rpm"} -v -p gh/crohr/test/centos6/master --sign 1 --keep 1000 ${DIR}/*.rpm
 
 echo "DONE"

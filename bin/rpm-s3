@@ -134,9 +134,13 @@ def sign(rpmfile):
         logging.error("Unable to sign package: %s", e)
         exit(1)
 
-def sign_metadata(repomdfile):
+def sign_metadata(repomdfile, gpg_master_key):
     """Requires a proper ~/.rpmmacros file. See <http://fedoranews.org/tchung/gpg/>"""
-    cmd = ["gpg", "--detach-sign", "--armor", repomdfile]
+    cmd = ["gpg", "--detach-sign", "--armor"]
+    if gpg_master_key != "1":
+        cmd.append("-u")
+        cmd.append(gpg_master_key)
+    cmd.append(repomdfile)
     logging.info(cmd)
     try:
         subprocess.check_call(cmd)
@@ -158,7 +162,7 @@ def setup_repository(repo, repopath):
 
 def update_repodata(repopath, rpmfiles, options):
     logging.info('rpmfiles: %s', rpmfiles)
-    tmpdir = tempfile.mkdtemp()
+    tmpdir = options.tmpdir or tempfile.mkdtemp()
     s3base = urlparse.urlunsplit(('s3', options.bucket, repopath, '', ''))
     s3grabber = S3Grabber(s3base, options.visibility, options.host)
     filegrabber = FileGrabber("file://" + os.getcwd())
@@ -228,7 +232,7 @@ def update_repodata(repopath, rpmfiles, options):
 
     # Generate repodata/repomd.xml.asc
     if options.sign:
-        sign_metadata(os.path.join(tmpdir, 'repodata', 'repomd.xml'))
+        sign_metadata(os.path.join(tmpdir, 'repodata', 'repomd.xml'), options.sign)
 
     # Replace metadata on s3
     s3grabber.syncdir(os.path.join(tmpdir, 'repodata'), 'repodata')
@@ -242,7 +246,8 @@ def main(options, args):
         level=logging.getLevelName(loglevel),
         format='%(asctime)s %(levelname)s %(message)s',
     )
-
+    if options.tmpdir and not os.path.exists(options.tmpdir):
+        os.makedirs(options.tmpdir)
     update_repodata(options.repopath, args, options)
 
 
@@ -253,7 +258,8 @@ if __name__ == '__main__':
     parser.add_option('-k', '--keep', type='int', default=2)
     parser.add_option('-v', '--verbose', action='count', default=0)
     parser.add_option('--visibility', default='private')
-    parser.add_option('-s', '--sign', action='count', default=0)
+    parser.add_option('-s', '--sign', default='')
+    parser.add_option('-t', '--tmpdir')
     parser.add_option('-l', '--logfile')
     parser.add_option('-d', '--delete', action='store_true', default=False)
     parser.add_option('-r', '--region')
