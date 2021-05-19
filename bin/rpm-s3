@@ -162,6 +162,11 @@ def setup_repository(repo, repopath):
 
 def update_repodata(repopath, rpmfiles, options):
     logging.info('rpmfiles: %s', rpmfiles)
+    for idx, rpmfile in enumerate(rpmfiles):
+        rpmfiles[idx] = rpmfile = os.path.realpath(rpmfile)
+        logging.info("rpmfile: %s", rpmfile)
+        if options.sign and not options.presignedrpm:
+            sign(rpmfile)
     tmpdir = options.tmpdir or tempfile.mkdtemp()
     s3base = urlparse.urlunsplit(('s3', options.bucket, repopath, '', ''))
     s3grabber = S3Grabber(s3base, options.visibility, options.host)
@@ -190,12 +195,6 @@ def update_repodata(repopath, rpmfiles, options):
     # Combine existing package sack with new rpm file list
     new_packages = []
     for rpmfile in rpmfiles:
-        rpmfile = os.path.realpath(rpmfile)
-        logging.info("rpmfile: %s", rpmfile)
-
-        if options.sign:
-            sign(rpmfile)
-
         mdgen._grabber = filegrabber
         # please, don't mess with my path in the <location> tags of primary.xml.gz
         relative_path = "."
@@ -225,8 +224,7 @@ def update_repodata(repopath, rpmfiles, options):
 
     # Upload rpm files to destination
     for rpmfile in rpmfiles:
-        rpmfile = os.path.realpath(rpmfile)
-        logging.info("rpmfile: %s", rpmfile)
+        logging.info("uploading rpmfile: %s", rpmfile)
         s3grabber.upload(rpmfile, os.path.basename(rpmfile))
 
 
@@ -259,6 +257,7 @@ if __name__ == '__main__':
     parser.add_option('-v', '--verbose', action='count', default=0)
     parser.add_option('--visibility', default='private')
     parser.add_option('-s', '--sign', default='')
+    parser.add_option('--presignedrpm', action='count', default=0)
     parser.add_option('-t', '--tmpdir')
     parser.add_option('-l', '--logfile')
     parser.add_option('-d', '--delete', action='store_true', default=False)
